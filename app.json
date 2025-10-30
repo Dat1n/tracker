@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "3f012498-6896-4ab1-8b89-c5e74e5185ac"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.haris.Tracker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
