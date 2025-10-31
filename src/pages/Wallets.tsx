@@ -33,14 +33,7 @@ interface NewMember {
 }
 
 const Savings = () => {
-  const {
-    savingsGoals,
-    addSavingsGoal,
-    contributeToSaving,
-    addTransaction,
-    activeWallet,
-    deleteSavingsGoal, // <-- added
-  } = useApp();
+  const { savingsGoals, addSavingsGoal, contributeToSaving, addTransaction, activeWallet, deleteSavingsGoal, } = useApp();
   const navigate = useNavigate();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -75,38 +68,44 @@ const Savings = () => {
     setNewSaving({ ...newSaving, members: updatedMembers });
   };
 
-  const handleCreateSaving = () => {
-    if (!newSaving.title.trim()) {
-      toast.error('Please enter a saving name');
-      return;
-    }
-    if (newSaving.targetAmount <= 0) {
-      toast.error('Target amount must be greater than 0');
-      return;
-    }
+ const handleCreateSaving = () => {
+  if (!newSaving.title.trim()) {
+    toast.error('Please enter a saving name');
+    return;
+  }
+  if (newSaving.targetAmount <= 0) {
+    toast.error('Target amount must be greater than 0');
+    return;
+  }
 
-    const savingData = {
-      title: newSaving.title,
-      targetAmount: newSaving.targetAmount,
-      deadline: newSaving.deadline || undefined,
-      members: newSaving.members.filter(m => m.name.trim() !== ''),
-      currentAmount: 0,
-    };
-    
-    addSavingsGoal(savingData);
-
-    toast.success('Saving created successfully!');
-    setIsDialogOpen(false);
-    setNewSaving({ title: '', targetAmount: 0, deadline: '', members: [] });
-    navigate('/savings');
+  // Create the saving goal
+  const savingData = {
+    title: newSaving.title,
+    targetAmount: newSaving.targetAmount,
+    deadline: newSaving.deadline || undefined,
+    members: newSaving.members.filter(m => m.name.trim() !== ''),
+    currentAmount: 0,
   };
+  
+  addSavingsGoal(savingData);
+
+  toast.success('Saving created successfully!');
+
+  // Reset the form
+  setIsDialogOpen(false);
+  setNewSaving({ title: '', targetAmount: 0, deadline: '', members: [] });
+
+  // Navigate back to the savings list
+  navigate('/savings');
+};
+
 
   const handleContribute = (goal: SavingsGoal) => {
     const input = prompt('Enter amount to contribute:', '0');
     const amount = parseFloat(input || '0');
     if (isNaN(amount) || amount <= 0) return;
 
-    contributeToSaving(goal.id, amount, 'You');
+    contributeToSaving(goal.id, amount, 'You'); // you can replace 'You' with a real user
 
     addTransaction({
       type: 'savings',
@@ -147,89 +146,115 @@ const Savings = () => {
                 <Plus className="w-6 h-6" />
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Saving</DialogTitle>
-              </DialogHeader>
+<DialogContent className="bg-[hsl(var(--card))] dark:bg-[hsl(var(--card))] text-[hsl(var(--stats-foreground))]">
+  <DialogHeader>
+    <DialogTitle className="text-[hsl(var(--stats-foreground))]">
+      Create New Saving
+    </DialogTitle>
+    {/* Close Button */}
 
-              <div className="space-y-4 mt-4">
-                <div>
-                  <Label htmlFor="saving-title">Saving Name</Label>
-                  <Input
-                    id="saving-title"
-                    placeholder="e.g., Emergency Fund"
-                    value={newSaving.title}
-                    onChange={(e) => setNewSaving({ ...newSaving, title: e.target.value })}
-                    className="mt-2"
-                  />
-                </div>
+  </DialogHeader>
 
-                <div>
-                  <Label htmlFor="target-amount">Target Amount</Label>
-                  <Input
-                    id="target-amount"
-                    type="number"
-                    placeholder="e.g., 5000"
-                    value={newSaving.targetAmount}
-                    onChange={(e) =>
-                      setNewSaving({ ...newSaving, targetAmount: Number(e.target.value) })
-                    }
-                    className="mt-2"
-                  />
-                </div>
+  <div className="space-y-4 mt-4">
+    {/* Saving Name */}
+    <div>
+      <Label
+        htmlFor="saving-title"
+        className="text-[hsl(var(--stats-foreground))]"
+      >
+        Saving Name
+      </Label>
+      <Input
+        id="saving-title"
+        placeholder="e.g., Emergency Fund"
+        value={newSaving.title}
+        onChange={(e) =>
+          setNewSaving({ ...newSaving, title: e.target.value })
+        }
+        className="mt-2 text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] bg-[hsl(var(--input))]"
+      />
+    </div>
 
-                <div>
-                  <Label htmlFor="deadline">Deadline (optional)</Label>
-                  <Input
-                    id="deadline"
-                    type="date"
-                    value={newSaving.deadline}
-                    onChange={(e) => setNewSaving({ ...newSaving, deadline: e.target.value })}
-                    className="mt-2"
-                  />
-                </div>
+    {/* Target Amount */}
+    <div>
+      <Label
+        htmlFor="target-amount"
+        className="text-[hsl(var(--stats-foreground))]"
+      >
+        Target Amount
+      </Label>
+      <Input
+        id="target-amount"
+        type="number"
+        placeholder="e.g., 5000"
+        value={newSaving.targetAmount}
+        onChange={(e) =>
+          setNewSaving({
+            ...newSaving,
+            targetAmount: Number(e.target.value),
+          })
+        }
+        className="mt-2 text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] bg-[hsl(var(--input))]"
+      />
+    </div>
 
-                {/* Members */}
-                <div>
-                  <Label>Members (optional)</Label>
-                  <div className="space-y-2 mt-2">
-                    {newSaving.members.map((member, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <User className="w-5 h-5 text-primary" />
-                        <Input
-                          placeholder="Member name"
-                          value={member.name}
-                          onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
-                          className="flex-1"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Assigned $"
-                          value={member.contribution ?? ''}
-                          onChange={(e) => handleMemberChange(index, 'contribution', e.target.value)}
-                          className="w-24"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => handleRemoveMember(index)}
-                        >
-                          ✕
-                        </Button>
-                      </div>
-                    ))}
-                    <Button type="button" onClick={handleAddMember} className="w-full mt-2">
-                      Add Member
-                    </Button>
-                  </div>
-                </div>
+    {/* Deadline */}
+    <div>
+      <Label
+        htmlFor="deadline"
+        className="text-[hsl(var(--stats-foreground))]"
+      >
+        Deadline (optional)
+      </Label>
+      <Input
+        id="deadline"
+        type="date"
+        value={newSaving.deadline}
+        onChange={(e) =>
+          setNewSaving({ ...newSaving, deadline: e.target.value })
+        }
+        className="mt-2 text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] bg-[hsl(var(--input))]"
+      />
+    </div>
 
-                <Button onClick={handleCreateSaving} className="w-full mt-4">
-                  Create Saving
-                </Button>
-              </div>
-            </DialogContent>
+    {/* Members */}
+    <div>
+      <Label className="text-[hsl(var(--stats-foreground))]">
+        Members (optional)
+      </Label>
+      <div className="space-y-2 mt-2">
+        {newSaving.members.map((member, index) => (
+          <div key={index} className="flex gap-2 items-center">
+            <User className="w-5 h-5 text-primary" />
+            <Input
+              placeholder="Member name"
+              value={member.name}
+              onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
+              className="flex-1 text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] bg-[hsl(var(--input))]"
+            />
+            <Input
+              type="number"
+              placeholder="Assigned $"
+              value={member.contribution ?? ''}
+              onChange={(e) => handleMemberChange(index, 'contribution', e.target.value)}
+              className="w-24 text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] bg-[hsl(var(--input))]"
+            />
+
+          </div>
+        ))}
+        <Button type="button" onClick={handleAddMember} className="w-full mt-2">
+          Add Member
+        </Button>
+      </div>
+    </div>
+
+    <Button onClick={handleCreateSaving} className="w-full mt-4">
+      Create Saving
+    </Button>
+  </div>
+</DialogContent>
+
+
           </Dialog>
         </div>
       </div>
@@ -242,7 +267,6 @@ const Savings = () => {
             <p className="text-sm text-muted-foreground mb-2">
               ${selectedGoal.currentAmount.toFixed(2)} / ${selectedGoal.targetAmount.toFixed(2)}
             </p>
-
             {selectedGoal.members && selectedGoal.members.length > 0 && (
               <div className="space-y-2 mb-4">
                 {selectedGoal.members.map((m, idx) => {
@@ -274,47 +298,21 @@ const Savings = () => {
               }}
             />
 
-            <div className="flex gap-2 mt-4">
-              <Button onClick={() => setSelectedGoal(null)} className="flex-1">
-                Back
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1"
-                onClick={() => {
-                  deleteSavingsGoal(selectedGoal.id);
-                  setSelectedGoal(null);
-                  toast.success('Saving deleted!');
-                }}
-              >
-                Delete
-              </Button>
-            </div>
+            <Button onClick={() => setSelectedGoal(null)} className="w-full mt-4">
+              Back
+            </Button>
           </Card>
         ) : savingsGoals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {savingsGoals.map((goal) => (
               <Card
                 key={goal.id}
-                className="p-4 cursor-pointer shadow-soft hover:shadow-md transition-all relative"
+                className="p-4 cursor-pointer shadow-soft hover:shadow-md transition-all"
                 onClick={() => navigate(`/savings/${goal.id}`)}
               >
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-bold text-lg">{goal.title}</h2>
-                  <div className="flex items-center gap-2">
-                    <PiggyBank className="text-primary w-5 h-5" />
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSavingsGoal(goal.id);
-                        toast.success('Saving deleted!');
-                      }}
-                    >
-                      ✕
-                    </Button>
-                  </div>
+                  <PiggyBank className="text-primary w-5 h-5" />
                 </div>
 
                 <p className="text-muted-foreground text-sm mb-1">
@@ -323,6 +321,7 @@ const Savings = () => {
                 {goal.deadline && (
                   <p className="text-xs text-muted-foreground mb-2">Deadline: {goal.deadline}</p>
                 )}
+
                 {goal.members && goal.members.length > 0 && (
                   <div className="mb-2 text-sm text-muted-foreground">
                     Members: {goal.members.map((m) => m.name).join(', ')}

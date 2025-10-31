@@ -76,27 +76,30 @@ const Index = () => {
       </div>
 
       <div className="px-6 mt-6 space-y-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatsCard
-            title="Monthly Income"
-            value={`$${monthlyIncome.toFixed(2)}`}
-            icon={TrendingUp}
-            gradient="success"
-          />
-          <StatsCard
-            title="Monthly Expenses"
-            value={`$${monthlyExpenses.toFixed(2)}`}
-            icon={TrendingDown}
-            gradient="warm"
-          />
-          <StatsCard
-            title="Total Savings"
-            value={`$${totalSavings.toFixed(2)}`}
-            icon={PiggyBank}
-            gradient="primary"
-          />
-        </div>
+  {/* Stats Grid */}
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <StatsCard
+      title="Monthly Income"
+      value={`$${monthlyIncome.toFixed(2)}`}
+      icon={TrendingUp}
+      gradient="success"
+      className="bg-[hsl(var(--card))] text-[hsl(var(--stats-foreground))] shadow-card"
+    />
+    <StatsCard
+      title="Monthly Expenses"
+      value={`$${monthlyExpenses.toFixed(2)}`}
+      icon={TrendingDown}
+      gradient="warm"
+      className="bg-[hsl(var(--card))] text-[hsl(var(--stats-foreground))] shadow-card"
+    />
+    <StatsCard
+      title="Total Savings"
+      value={`$${totalSavings.toFixed(2)}`}
+      icon={PiggyBank}
+      gradient="primary"
+      className="bg-[hsl(var(--card))] text-[hsl(var(--stats-foreground))] shadow-card"
+    />
+  </div>
 
         {/* Savings Goals */}
         {savingsGoals.length > 0 && (
@@ -132,10 +135,15 @@ const Index = () => {
         </Button>
       </Link>
       <Link to="/history">
-        <Button size="sm" variant="outline" className="rounded-full">
-          View All
-        </Button>
-      </Link>
+  <Button
+    size="sm"
+    variant="outline"
+    className="rounded-full border border-black bg-white text-black hover:bg-gray-100 hover:shadow-sm transition"
+  >
+    View All
+  </Button>
+</Link>
+
     </div>
   </div>
   <div className="space-y-3">

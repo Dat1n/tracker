@@ -2,123 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    /* Pastel background gradients */
-    --background: 280 40% 98%;
-    --foreground: 280 10% 20%;
+    /* Light Mode - Sleek modern white theme */
+    --background: 0 0% 100%;       /* white */
+    --foreground: 210 10% 10%;     /* black for balance & wallet */
+    --stats-foreground: 210 10% 30%; /* darker gray for stats cards for contrast */
 
-    /* Soft pastel cards */
-    --card: 0 0% 100%;
-    --card-foreground: 280 10% 20%;
+    --card: 0 0% 98%;
+    --card-foreground: 210 10% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 280 10% 20%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 210 10% 10%;
 
-    /* Primary pastel pink */
-    --primary: 340 80% 85%;
-    --primary-foreground: 340 60% 30%;
+    --primary: 220 8% 18%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary pastel lavender */
-    --secondary: 270 60% 88%;
-    --secondary-foreground: 270 50% 35%;
+    --secondary: 220 6% 92%;
+    --secondary-foreground: 210 10% 18%;
 
-    /* Muted pastel gray */
-    --muted: 240 20% 94%;
-    --muted-foreground: 240 10% 50%;
+    --muted: 220 8% 96%;
+    --muted-foreground: 210 10% 50%;
 
-    /* Accent pastel mint */
-    --accent: 160 60% 85%;
-    --accent-foreground: 160 50% 30%;
+    --accent: 220 8% 18%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Success pastel green */
-    --success: 140 55% 80%;
-    --success-foreground: 140 50% 30%;
+    --success: 140 35% 45%;
+    --success-foreground: 0 0% 100%;
 
-    /* Warning pastel peach */
-    --warning: 30 85% 82%;
-    --warning-foreground: 30 70% 35%;
+    --warning: 40 60% 60%;
+    --warning-foreground: 0 0% 15%;
 
-    /* Destructive soft red */
-    --destructive: 0 70% 85%;
-    --destructive-foreground: 0 60% 35%;
+    --destructive: 0 60% 65%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Borders and inputs */
-    --border: 240 20% 92%;
-    --input: 240 20% 94%;
-    --ring: 340 80% 85%;
+    --border: 220 8% 90%;
+    --input: 220 8% 96%;
+    --ring: 220 10% 18%;
 
     --radius: 1rem;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(340 80% 90%) 0%, hsl(270 60% 88%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(160 60% 85%) 0%, hsl(140 55% 80%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(30 85% 88%) 0%, hsl(340 80% 90%) 100%);
-    
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -2px hsl(280 20% 80% / 0.3);
-    --shadow-card: 0 8px 30px -4px hsl(280 20% 70% / 0.2);
-    --shadow-glow: 0 0 40px hsl(340 80% 85% / 0.5);
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 8% 94%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(140 35% 45%) 0%, hsl(140 30% 55%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(220 8% 18%) 0%, hsl(0 0% 100%) 100%);
 
-    /* Animations */
+    --shadow-soft: 0 6px 24px -6px rgba(16,24,32,0.06);
+    --shadow-card: 0 10px 40px -8px rgba(16,24,32,0.06);
+    --shadow-glow: 0 0 30px rgba(0,0,0,0.03);
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 280 20% 10%;
-    --foreground: 280 10% 95%;
+    /* Dark Mode - Sleek modern black theme */
+    --background: 0 0% 5%;         /* near black */
+    --foreground: 0 0% 95%;        /* white for balance & wallet */
+    --stats-foreground: 0 0% 90%;  /* slightly dimmer white for stats cards */
 
-    --card: 280 15% 15%;
-    --card-foreground: 280 10% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 280 15% 15%;
-    --popover-foreground: 280 10% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 340 70% 65%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 210 10% 10%;
 
-    --secondary: 270 50% 55%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 210 8% 20%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 280 15% 20%;
-    --muted-foreground: 280 10% 70%;
+    --muted: 210 6% 15%;
+    --muted-foreground: 210 10% 65%;
 
-    --accent: 160 50% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 210 8% 75%;
+    --accent-foreground: 0 0% 6%;
 
-    --success: 140 50% 55%;
-    --success-foreground: 0 0% 100%;
+    --success: 140 40% 65%;
+    --success-foreground: 0 0% 95%;
 
-    --warning: 30 70% 60%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 40 75% 65%;
+    --warning-foreground: 0 0% 10%;
 
-    --destructive: 0 60% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 65% 60%;
+    --destructive-foreground: 0 0% 95%;
 
-    --border: 280 15% 25%;
-    --input: 280 15% 20%;
-    --ring: 340 70% 65%;
+    --border: 210 6% 20%;
+    --input: 210 6% 15%;
+    --ring: 0 0% 100%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(340 70% 45%) 0%, hsl(270 50% 45%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(160 50% 45%) 0%, hsl(140 50% 45%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(30 70% 50%) 0%, hsl(340 70% 50%) 100%);
-    
-    --shadow-soft: 0 4px 20px -2px hsl(0 0% 0% / 0.4);
-    --shadow-card: 0 8px 30px -4px hsl(0 0% 0% / 0.3);
-    --shadow-glow: 0 0 40px hsl(340 70% 45% / 0.3);
-  }
-}
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(210 8% 20%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(140 40% 65%) 0%, hsl(140 30% 55%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 8% 15%) 100%);
 
-@layer base {
-  * {
-    @apply border-border;
+    --shadow-soft: 0 6px 24px -6px rgba(0,0,0,0.6);
+    --shadow-card: 0 10px 40px -8px rgba(0,0,0,0.7);
+    --shadow-glow: 0 0 30px rgba(255,255,255,0.06);
   }
 
-  body {
-    @apply bg-background text-foreground;
+  /* Balance & Wallet text */
+  .theme-foreground {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Stats card text */
+  .theme-stats-foreground {
+    color: hsl(var(--stats-foreground)) !important;
   }
 }

@@ -12,6 +12,7 @@ import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import SavingDetails from './pages/SavingDetails';
 import HistoryTransactions from "./pages/HistoryTransaction";
+import AnalyticsHistory from "./pages/AnalyticsHistory";
 
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/savings/:id" element={<SavingDetails />} />
             <Route path="/history" element={<HistoryTransactions />} />
+            <Route path="/analytics-history" element={<AnalyticsHistory />} />
             {/* Catch-all 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
