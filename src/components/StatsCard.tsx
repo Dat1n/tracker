@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { LucideIcon } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
@@ -10,7 +10,7 @@ interface StatsCardProps {
     value: string;
     isPositive: boolean;
   };
-  gradient?: 'primary' | 'success' | 'warm';
+  gradient?: "primary" | "success" | "warm";
   className?: string; // optional override
 }
 
@@ -19,13 +19,13 @@ const StatsCard: React.FC<StatsCardProps> = ({
   value,
   icon: Icon,
   trend,
-  gradient = 'primary',
-  className = '',
+  gradient = "primary",
+  className = "",
 }) => {
   const gradientClasses = {
-    primary: 'bg-gradient-primary',
-    success: 'bg-gradient-success',
-    warm: 'bg-gradient-warm',
+    primary: "bg-gradient-primary",
+    success: "bg-gradient-success",
+    warm: "bg-gradient-warm",
   };
 
   return (
@@ -34,17 +34,21 @@ const StatsCard: React.FC<StatsCardProps> = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-[hsl(var(--stats-foreground))] mb-1">{title}</p>
+          <p className="text-sm text-[hsl(var(--stats-foreground))] mb-1">
+            {title}
+          </p>
           <p className="text-3xl font-bold text-[hsl(var(--stats-foreground))]">
             {value}
           </p>
           {trend && (
             <p
               className={`text-sm mt-2 ${
-                trend.isPositive ? 'text-[hsl(var(--success-foreground))]' : 'text-[hsl(var(--destructive-foreground))]'
+                trend.isPositive
+                  ? "text-[hsl(var(--success-foreground))]"
+                  : "text-[hsl(var(--destructive-foreground))]"
               }`}
             >
-              {trend.isPositive ? '↑' : '↓'} {trend.value}
+              {trend.isPositive ? "↑" : "↓"} {trend.value}
             </p>
           )}
         </div>

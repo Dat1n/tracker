@@ -4,60 +4,75 @@
 
 @layer base {
   :root {
-    /* Light Mode - Sleek modern white theme */
-    --background: 0 0% 100%;       /* white */
-    --foreground: 210 10% 10%;     /* black for balance & wallet */
-    --stats-foreground: 210 10% 30%; /* darker gray for stats cards for contrast */
+    /* Forest Matcha - balanced greens & soft neutrals */
+    --background: 105 25% 96%; /* soft misty green background */
+    --foreground: 140 25% 18%; /* deep forest text that blends naturally */
+    --stats-foreground: 140 15% 32%; /* subtle dark green-gray for stats/cards */
 
-    --card: 0 0% 98%;
-    --card-foreground: 210 10% 10%;
+    --card: 105 15% 98%;
+    --card-foreground: 140 25% 18%;
 
-    --popover: 0 0% 98%;
-    --popover-foreground: 210 10% 10%;
+    --popover: 105 15% 98%;
+    --popover-foreground: 140 25% 18%;
 
-    --primary: 220 8% 18%;
+    --primary: 140 30% 25%; /* rich forest green */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 6% 92%;
-    --secondary-foreground: 210 10% 18%;
+    --secondary: 100 15% 90%; /* misty green-gray */
+    --secondary-foreground: 140 25% 20%;
 
-    --muted: 220 8% 96%;
-    --muted-foreground: 210 10% 50%;
+    --muted: 100 10% 90%;
+    --muted-foreground: 140 10% 40%;
 
-    --accent: 220 8% 18%;
+    --accent: 135 25% 30%; /* moss green accent */
     --accent-foreground: 0 0% 100%;
 
-    --success: 140 35% 45%;
+    --success: 135 35% 35%; /* natural, confident green */
     --success-foreground: 0 0% 100%;
 
-    --warning: 40 60% 60%;
+    --warning: 45 70% 60%; /* warm honey yellow */
     --warning-foreground: 0 0% 15%;
 
-    --destructive: 0 60% 65%;
+    --destructive: 5 60% 55%; /* clay red for errors */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 8% 90%;
-    --input: 220 8% 96%;
-    --ring: 220 10% 18%;
+    --border: 105 15% 85%;
+    --input: 105 15% 94%;
+    --ring: 140 30% 25%;
 
     --radius: 1rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 8% 94%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(140 35% 45%) 0%, hsl(140 30% 55%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(220 8% 18%) 0%, hsl(0 0% 100%) 100%);
+    /* Natural forest gradients */
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(135 40% 25%) 0%,
+      hsl(140 35% 45%) 50%,
+      hsl(107, 27%, 76%) 100%
+    );
+    --gradient-success: linear-gradient(
+      135deg,
+      hsl(135 35% 35%) 0%,
+      hsl(140 30% 50%) 100%
+    );
+    --gradient-warm: linear-gradient(
+      135deg,
+      hsl(10, 70%, 55%) 0%,
+      hsl(5, 65%, 45%) 100%
+    );
 
-    --shadow-soft: 0 6px 24px -6px rgba(16,24,32,0.06);
-    --shadow-card: 0 10px 40px -8px rgba(16,24,32,0.06);
-    --shadow-glow: 0 0 30px rgba(0,0,0,0.03);
+    /* Soft natural shadows */
+    --shadow-soft: 0 6px 24px -6px rgba(40, 60, 40, 0.08);
+    --shadow-card: 0 10px 40px -8px rgba(40, 60, 40, 0.08);
+    --shadow-glow: 0 0 30px rgba(80, 120, 80, 0.06);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
     /* Dark Mode - Sleek modern black theme */
-    --background: 0 0% 5%;         /* near black */
-    --foreground: 0 0% 95%;        /* white for balance & wallet */
-    --stats-foreground: 0 0% 90%;  /* slightly dimmer white for stats cards */
+    --background: 0 0% 5%; /* near black */
+    --foreground: 0 0% 95%; /* white for balance & wallet */
+    --stats-foreground: 0 0% 90%; /* slightly dimmer white for stats cards */
 
     --card: 0 0% 10%;
     --card-foreground: 0 0% 95%;
@@ -68,7 +83,7 @@
     --primary: 0 0% 100%;
     --primary-foreground: 210 10% 10%;
 
-    --secondary: 210 8% 20%;
+    --secondary: 210 8% 1%;
     --secondary-foreground: 0 0% 95%;
 
     --muted: 210 6% 15%;
@@ -90,22 +105,53 @@
     --input: 210 6% 15%;
     --ring: 0 0% 100%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(210 8% 20%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(140 40% 65%) 0%, hsl(140 30% 55%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 8% 15%) 100%);
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(0 0% 5%) 0%,
+      hsl(210 8% 20%) 100%
+    );
+    --gradient-success: linear-gradient(
+      135deg,
+      hsl(140 40% 65%) 0%,
+      hsl(140 30% 55%) 100%
+    );
+    --gradient-warm: linear-gradient(
+      135deg,
+      hsl(10, 70%, 55%) 0%,
+      hsl(5, 65%, 45%) 100%
+    );
+    --gradient-danger: linear-gradient(
+      135deg,
+      hsl(5 75% 55%) 0%,
+      hsl(0 65% 45%) 100%
+    );
 
-    --shadow-soft: 0 6px 24px -6px rgba(0,0,0,0.6);
-    --shadow-card: 0 10px 40px -8px rgba(0,0,0,0.7);
-    --shadow-glow: 0 0 30px rgba(255,255,255,0.06);
+    --shadow-soft: 0 6px 24px -6px rgba(0, 0, 0, 0.6);
+    --shadow-card: 0 10px 40px -8px rgba(0, 0, 0, 0.7);
+    --shadow-glow: 0 0 30px rgba(211, 8, 8, 0.06);
   }
 
-  /* Balance & Wallet text */
+  /* Theme foreground helpers */
   .theme-foreground {
     color: hsl(var(--foreground)) !important;
   }
 
-  /* Stats card text */
   .theme-stats-foreground {
     color: hsl(var(--stats-foreground)) !important;
+  }
+
+  /* Global background gradient fix */
+  html,
+  body {
+    background: linear-gradient(
+      to bottom right,
+      hsl(var(--background)),
+      hsl(var(--secondary) / 0.4),
+      hsl(var(--primary) / 0.2)
+    );
+    background-attachment: fixed;
+    min-height: 100%;
+    color: hsl(var(--foreground));
+    overscroll-behavior: none;
   }
 }
