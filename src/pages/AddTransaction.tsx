@@ -12,9 +12,12 @@ import { toast } from 'sonner';
 import VirtualPet from '@/components/VirtualPet';
 
 const AddTransaction = () => {
-  const { addTransaction, categories, activeWallet } = useApp();
+  const { addTransaction, categories, activeWallet, savingsGoals, contributeToSaving } = useApp();
   const navigate = useNavigate();
   const [showPet, setShowPet] = useState(false);
+
+  // User name for contributions (you can replace this with a proper auth user)
+  const [userName, setUserName] = useState('You');
 
   const [formData, setFormData] = useState({
     type: 'expense' as 'expense' | 'income' | 'savings',
@@ -23,39 +26,52 @@ const AddTransaction = () => {
     title: '',
     note: '',
     date: new Date().toISOString().split('T')[0],
+    savingId: '',
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.amount || !formData.category) {
-      toast.error('Please fill in required fields');
-      return;
-    }
-
-    addTransaction({
-      ...formData,
-      amount: parseFloat(formData.amount),
-      walletId: activeWallet,
-    });
-
-    if (formData.type === 'savings') {
-      setShowPet(true);
-      setTimeout(() => {
-        toast.success('Great job saving! 🎉');
-        navigate('/');
-      }, 3000);
-    } else {
-      toast.success('Transaction added!');
-      navigate('/');
-    }
-  };
 
   const filteredCategories = categories.filter((c) => {
     if (formData.type === 'income') return c.id === 'income';
     if (formData.type === 'savings') return c.id === 'savings';
     return c.id !== 'income' && c.id !== 'savings';
   });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const amount = parseFloat(formData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Amount must be greater than 0');
+      return;
+    }
+
+    if (formData.type === 'savings') {
+      if (!formData.savingId) {
+        toast.error('Please select a saving goal to contribute to');
+        return;
+      }
+
+      contributeToSaving(formData.savingId, amount, userName);
+
+      setShowPet(true);
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
+    } else {
+      if (!formData.category) {
+        toast.error('Please select a category');
+        return;
+      }
+
+      addTransaction({
+        ...formData,
+        amount,
+        walletId: activeWallet,
+      });
+
+      toast.success('Transaction added!');
+      navigate('/');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5 pb-20">
@@ -81,7 +97,7 @@ const AddTransaction = () => {
       <div className="px-6 mt-6">
         <Card className="p-6 shadow-card border-none">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Type Selection */}
+            {/* Transaction Type */}
             <div>
               <Label>Transaction Type</Label>
               <div className="grid grid-cols-3 gap-3 mt-2">
@@ -91,7 +107,7 @@ const AddTransaction = () => {
                     type="button"
                     variant={formData.type === type ? 'default' : 'outline'}
                     onClick={() =>
-                      setFormData({ ...formData, type: type as any, category: '' })
+                      setFormData({ ...formData, type: type as any, category: '', savingId: '' })
                     }
                     className="capitalize"
                   >
@@ -100,6 +116,59 @@ const AddTransaction = () => {
                 ))}
               </div>
             </div>
+
+            {/* Savings Goal */}
+            {formData.type === 'savings' && (
+              <div>
+                <Label>Select Saving Goal *</Label>
+                <div className="grid grid-cols-1 gap-2 mt-2">
+                  {savingsGoals.length > 0 ? (
+                    savingsGoals.map((goal) => {
+                      const totalContributed =
+                        goal.members?.reduce((sum, m) => sum + (m.contribution || 0), 0) || 0;
+
+                      return (
+                        <div key={goal.id} className="border rounded-xl p-3 shadow-sm">
+                          <Button
+                            type="button"
+                            variant={formData.savingId === goal.id ? 'default' : 'outline'}
+                            onClick={() => setFormData({ ...formData, savingId: goal.id })}
+                            className="w-full text-left"
+                          >
+                            {goal.title} - ${totalContributed.toFixed(2)} / ${goal.targetAmount.toFixed(2)}
+                          </Button>
+
+                          {goal.members && goal.members.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {goal.members.map((m, idx) => (
+                                <div key={idx} className="flex justify-between text-sm text-muted-foreground">
+                                  <span>{m.name}</span>
+                                  <span>${(m.contribution || 0).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No savings goals yet</p>
+                  )}
+                </div>
+
+                {/* Optional: contributor name input */}
+                <div className="mt-3">
+                  <Label htmlFor="userName">Your Name</Label>
+                  <Input
+                    id="userName"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Amount */}
             <div>
@@ -117,23 +186,25 @@ const AddTransaction = () => {
             </div>
 
             {/* Category */}
-            <div>
-              <Label>Category *</Label>
-              <div className="grid grid-cols-3 gap-3 mt-2">
-                {filteredCategories.map((category) => (
-                  <Button
-                    key={category.id}
-                    type="button"
-                    variant={formData.category === category.id ? 'default' : 'outline'}
-                    onClick={() => setFormData({ ...formData, category: category.id })}
-                    className="h-auto py-3 flex flex-col gap-1"
-                  >
-                    <span className="text-2xl">{category.icon}</span>
-                    <span className="text-xs">{category.name}</span>
-                  </Button>
-                ))}
+            {formData.type !== 'savings' && (
+              <div>
+                <Label>Category *</Label>
+                <div className="grid grid-cols-3 gap-3 mt-2">
+                  {filteredCategories.map((category) => (
+                    <Button
+                      key={category.id}
+                      type="button"
+                      variant={formData.category === category.id ? 'default' : 'outline'}
+                      onClick={() => setFormData({ ...formData, category: category.id })}
+                      className="h-auto py-3 flex flex-col gap-1"
+                    >
+                      <span className="text-2xl">{category.icon}</span>
+                      <span className="text-xs">{category.name}</span>
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Title */}
             <div>

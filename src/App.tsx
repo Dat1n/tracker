@@ -4,11 +4,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
+
 import Index from "./pages/Index";
 import AddTransaction from "./pages/AddTransaction";
-import Wallets from "./pages/Wallets";
+import Wallets from "./pages/Wallets"; // This is your Savings list page
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+import SavingDetails from './pages/SavingDetails';
+import HistoryTransactions from "./pages/HistoryTransaction";
+
 
 const queryClient = new QueryClient();
 
@@ -22,9 +26,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/add" element={<AddTransaction />} />
-            <Route path="/wallets" element={<Wallets />} />
+            <Route path="/wallets" element={<Wallets />} /> {/* List of savings */}
             <Route path="/analytics" element={<Analytics />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/savings/:id" element={<SavingDetails />} />
+            <Route path="/history" element={<HistoryTransactions />} />
+            {/* Catch-all 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
