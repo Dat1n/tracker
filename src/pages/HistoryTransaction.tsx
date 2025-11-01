@@ -6,11 +6,13 @@ import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const HistoryTransactions = () => {
-  const { transactions, wallets, activeWallet } = useApp();
+  const { transactions, wallets, activeWallet, theme } = useApp();
   const navigate = useNavigate();
   const currentWallet = wallets.find((w) => w.id === activeWallet);
 
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    new Date().getMonth()
+  );
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const walletTransactions = transactions
@@ -21,8 +23,18 @@ const HistoryTransactions = () => {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   return (
@@ -38,7 +50,10 @@ const HistoryTransactions = () => {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "Fredoka" }}>
+            <h1
+              className="text-2xl font-bold text-white"
+              style={{ fontFamily: "Fredoka" }}
+            >
               Transaction History
             </h1>
             <p className="text-white/80 mt-1">{currentWallet?.name}</p>
@@ -49,13 +64,28 @@ const HistoryTransactions = () => {
         <div className="relative ml-auto">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-sm hover:bg-white/30 transition"
+            className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-sm transition backdrop-blur-md ${
+              theme === "light"
+                ? "bg-white/20 text-black hover:bg-white/30"
+                : "bg-black/30 text-white hover:bg-black/50"
+            }`}
           >
             {monthNames[selectedMonth]}
-            <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${
+                dropdownOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
+
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg overflow-hidden z-10">
+            <div
+              className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg overflow-hidden z-10 ${
+                theme === "light"
+                  ? "bg-white/80 text-black"
+                  : "bg-black/80 text-white"
+              }`}
+            >
               {monthNames.map((name, idx) => (
                 <button
                   key={idx}
@@ -63,8 +93,14 @@ const HistoryTransactions = () => {
                     setSelectedMonth(idx);
                     setDropdownOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition ${
-                    idx === selectedMonth ? "bg-gray-200 font-semibold" : ""
+                  className={`w-full text-left px-4 py-2 hover:${
+                    theme === "light" ? "bg-gray-100" : "bg-gray-700"
+                  } transition ${
+                    idx === selectedMonth
+                      ? theme === "light"
+                        ? "bg-gray-200 font-semibold"
+                        : "bg-gray-700 font-semibold"
+                      : ""
                   }`}
                 >
                   {name}
@@ -95,12 +131,18 @@ const HistoryTransactions = () => {
                     {new Date(t.date).toLocaleDateString()}
                   </p>
                   {t.note && (
-                    <p className="text-xs text-muted-foreground mt-1">{t.note}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t.note}
+                    </p>
                   )}
                 </div>
                 <p
                   className={`font-bold ${
-                    isIncome ? "text-green-600" : isExpense ? "text-red-600" : "text-blue-600"
+                    isIncome
+                      ? "text-green-600"
+                      : isExpense
+                      ? "text-red-600"
+                      : "text-blue-600"
                   }`}
                 >
                   {amountSign}${t.amount.toFixed(2)}

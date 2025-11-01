@@ -11,6 +11,7 @@ interface StatsCardProps {
     isPositive: boolean;
   };
   gradient?: "primary" | "success" | "warm";
+  subText?: React.ReactNode; // optional subtext below value
   className?: string; // optional override
 }
 
@@ -20,6 +21,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
   icon: Icon,
   trend,
   gradient = "primary",
+  subText,
   className = "",
 }) => {
   const gradientClasses = {
@@ -40,6 +42,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
           <p className="text-3xl font-bold text-[hsl(var(--stats-foreground))]">
             {value}
           </p>
+
+          {/* Render optional subText inside the card below value */}
+          {subText && (
+            <p className="text-xs text-muted-foreground mt-1 text-left">
+              {subText}
+            </p>
+          )}
+
           {trend && (
             <p
               className={`text-sm mt-2 ${
@@ -52,6 +62,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
             </p>
           )}
         </div>
+
         <div className={`p-3 rounded-2xl ${gradientClasses[gradient]}`}>
           <Icon className="w-6 h-6 text-white" />
         </div>

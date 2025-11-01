@@ -21,36 +21,65 @@ const Index = () => {
 
   const currentWallet = wallets.find((w) => w.id === activeWallet);
 
-  // Get last 5 transactions for the current wallet, including savings
+  // Last 5 transactions
   const walletTransactions = transactions
     .filter((t) => t.walletId === activeWallet)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  // Stats calculations
-  const monthlyIncome = transactions
-    .filter(
-      (t) =>
-        t.type === "income" &&
-        new Date(t.date).getMonth() === new Date().getMonth()
-    )
+  // All-time stats
+  const allTimeTransactions = transactions.filter(
+    (t) => t.walletId === activeWallet
+  );
+  const allTimeIncome = allTimeTransactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const allTimeExpenses = allTimeTransactions
+    .filter((t) => t.type === "expense" || t.type === "savings")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const allTimeBalance = allTimeIncome - allTimeExpenses;
+
+  // Determine current month/year from the latest transaction
+  const latestTx = allTimeTransactions.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  )[0];
+
+  const currentMonth = latestTx
+    ? new Date(latestTx.date).getMonth()
+    : new Date().getMonth();
+  const currentYear = latestTx
+    ? new Date(latestTx.date).getFullYear()
+    : new Date().getFullYear();
+
+  // Current month stats based on latest transaction month
+  const currentMonthTransactions = allTimeTransactions.filter((t) => {
+    const txDate = new Date(t.date);
+    return (
+      t.walletId === activeWallet &&
+      txDate.getMonth() === currentMonth &&
+      txDate.getFullYear() === currentYear
+    );
+  });
+
+  const monthlyIncome = currentMonthTransactions
+    .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const monthlyExpenses = transactions
-    .filter(
-      (t) =>
-        t.type === "expense" &&
-        new Date(t.date).getMonth() === new Date().getMonth()
-    )
+  const monthlyExpenses = currentMonthTransactions
+    .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
+
+  const monthlySavings = currentMonthTransactions
+    .filter((t) => t.type === "savings")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const currentMonthBalance =
+    monthlyIncome - (monthlyExpenses + monthlySavings);
 
   const totalSavings = savingsGoals.reduce(
     (sum, g) => sum + g.currentAmount,
     0
   );
-
-  // Current wallet balance does NOT deduct savings contributions
-  const currentBalance = currentWallet?.balance || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5 pb-20">
@@ -84,12 +113,17 @@ const Index = () => {
 
         {/* Current Wallet Balance */}
         <Card className="p-6 bg-white/95 backdrop-blur border-none shadow-glow">
-          <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
+          <p className="text-sm text-muted-foreground mb-2">
+            Current Balance (All-Time)
+          </p>
           <p className="text-4xl font-bold bg-gradient-primary bg-clip-text text-black">
-            ${currentBalance.toFixed(2)}
+            ${allTimeBalance.toFixed(2)}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            {currentWallet?.name}
+            {currentWallet?.name || "No Wallet Selected"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Current Month Net: ${currentMonthBalance.toFixed(2)}
           </p>
         </Card>
       </div>
@@ -102,6 +136,7 @@ const Index = () => {
             value={`$${monthlyIncome.toFixed(2)}`}
             icon={TrendingUp}
             gradient="success"
+            subText={`All-Time Income: $${allTimeIncome.toFixed(2)}`}
             className="bg-[hsl(var(--card))] text-[hsl(var(--stats-foreground))] shadow-card"
           />
           <StatsCard
@@ -109,6 +144,7 @@ const Index = () => {
             value={`$${monthlyExpenses.toFixed(2)}`}
             icon={TrendingDown}
             gradient="warm"
+            subText={`All-Time Expenses: $${allTimeExpenses.toFixed(2)}`}
             className="bg-[hsl(var(--card))] text-[hsl(var(--stats-foreground))] shadow-card"
           />
           <StatsCard
@@ -136,7 +172,7 @@ const Index = () => {
                   </div>
                   <Progress
                     value={(goal.currentAmount / goal.targetAmount) * 100}
-                    className="h-3"
+                    className="h-3 [&>div]:bg-green-500"
                   />
                 </Card>
               ))}

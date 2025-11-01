@@ -15,28 +15,25 @@ import {
 import { ArrowLeft, Plus, Cat, User, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Pie } from "react-chartjs-2";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface NewMember {
   name: string;
   contribution?: number;
 }
 
-const Savings = () => {
+const Savings: React.FC = () => {
   const {
     savingsGoals,
     addSavingsGoal,
     contributeToSaving,
     addTransaction,
-    deleteSavingsGoal, // ✅ New delete function
+    deleteSavingsGoal,
     activeWallet,
   } = useApp();
 
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [newSaving, setNewSaving] = useState({
     title: "",
     targetAmount: "",
@@ -70,7 +67,7 @@ const Savings = () => {
     setNewSaving({ ...newSaving, members: updatedMembers });
   };
 
-  const handleCreateSaving = () => {
+  const handleCreateSaving = async () => {
     const targetAmountNum = Number(newSaving.targetAmount);
 
     if (!newSaving.title.trim()) {
@@ -90,36 +87,56 @@ const Savings = () => {
       members: newSaving.members.filter((m) => m.name.trim() !== ""),
     };
 
-    const newGoal = addSavingsGoal(savingData);
-    toast.success("Saving created successfully!");
-    setIsDialogOpen(false);
-    setNewSaving({ title: "", targetAmount: "", deadline: "", members: [] });
-    navigate(`/savings/${newGoal.id}`);
-  };
-
-  const handleDeleteSaving = (goalId: string, title: string) => {
-    if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
-      deleteSavingsGoal(goalId);
-      toast.success("Saving deleted successfully!");
+    setLoading(true);
+    try {
+      const newGoal = await addSavingsGoal(savingData);
+      toast.success("Saving created successfully!");
+      setIsDialogOpen(false);
+      setNewSaving({ title: "", targetAmount: "", deadline: "", members: [] });
+      navigate(`/savings/${newGoal.id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create saving goal");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleContribute = (goal: SavingsGoal) => {
+  const handleDeleteSaving = async (goalId: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
+    try {
+      await deleteSavingsGoal(goalId);
+      toast.success("Saving deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete saving goal");
+    }
+  };
+
+  const handleContribute = async (goal: SavingsGoal) => {
     const input = prompt("Enter amount to contribute:", "0");
     const amount = parseFloat(input || "0");
     if (isNaN(amount) || amount <= 0) return;
 
-    contributeToSaving(goal.id, amount, "You");
-    addTransaction({
-      type: "savings",
-      amount,
-      walletId: activeWallet,
-      category: "savings",
-      title: `Contribution to ${goal.title}`,
-      note: "",
-      date: new Date().toISOString().split("T")[0],
-    });
-    toast.success("Contribution added!");
+    setLoading(true);
+    try {
+      await contributeToSaving(goal.id, amount, "You");
+      await addTransaction({
+        type: "savings",
+        amount,
+        walletId: activeWallet,
+        category: "savings",
+        title: `Contribution to ${goal.title}`,
+        note: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+      toast.success("Contribution added!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to add contribution");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -179,12 +196,12 @@ const Savings = () => {
                     placeholder="e.g., 5000"
                     min="1"
                     value={newSaving.targetAmount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "" || Number(value) >= 0) {
-                        setNewSaving({ ...newSaving, targetAmount: value });
-                      }
-                    }}
+                    onChange={(e) =>
+                      setNewSaving({
+                        ...newSaving,
+                        targetAmount: e.target.value,
+                      })
+                    }
                     className="mt-2 bg-[hsl(var(--input))]"
                   />
                 </div>
@@ -249,8 +266,12 @@ const Savings = () => {
                   </div>
                 </div>
 
-                <Button onClick={handleCreateSaving} className="w-full mt-4">
-                  Create Saving
+                <Button
+                  onClick={handleCreateSaving}
+                  className="w-full mt-4"
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Create Saving"}
                 </Button>
               </div>
             </DialogContent>
@@ -304,6 +325,13 @@ const Savings = () => {
                     }}
                   />
                 </div>
+                <Button
+                  onClick={() => handleContribute(goal)}
+                  className="w-full mt-3"
+                  disabled={loading}
+                >
+                  Contribute
+                </Button>
               </Card>
             ))}
           </div>
