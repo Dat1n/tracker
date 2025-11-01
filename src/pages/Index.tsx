@@ -120,7 +120,7 @@ const Index = () => {
             ${allTimeBalance.toFixed(2)}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            {currentWallet?.name || "No Wallet Selected"}
+            {currentWallet?.name || "1 day or day 1 - you decide."}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             Current Month Net: ${currentMonthBalance.toFixed(2)}
@@ -186,7 +186,10 @@ const Index = () => {
             <h2 className="text-xl font-semibold">Recent Transactions</h2>
             <div className="flex gap-2">
               <Link to="/add">
-                <Button size="sm" className="rounded-full">
+                <Button
+                  size="sm"
+                  className="rounded-full border border-black bg-white text-black hover:bg-gray-100 hover:shadow-sm transition"
+                >
                   <Plus className="w-4 h-4 mr-1" /> Add
                 </Button>
               </Link>
