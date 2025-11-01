@@ -42,7 +42,6 @@ const Analytics: React.FC = () => {
     );
 
     const monthlyTotals = Array(12).fill(0);
-
     walletTransactions.forEach((t) => {
       if (t.type === "expense") {
         monthlyTotals[new Date(t.date).getMonth()] += t.amount;
@@ -51,14 +50,12 @@ const Analytics: React.FC = () => {
 
     setMonthlyData(monthlyTotals);
 
-    // Only save if data changed or not present
     const savedData = analyticsHistory[currentYear];
     const isDifferent =
       !savedData || savedData.some((v, i) => v !== monthlyTotals[i]);
     if (isDifferent) {
       saveAnalytics(currentYear, monthlyTotals);
     }
-    // ✅ Removed analyticsHistory from dependencies to prevent loop
   }, [transactions, activeWallet, currentYear, saveAnalytics]);
 
   const maxExpense = Math.max(...monthlyData, 1);
@@ -102,9 +99,12 @@ const Analytics: React.FC = () => {
             </h1>
           </div>
           <Button
-            variant="secondary"
             size="sm"
-            className="flex items-center gap-1 bg-white/80 text-primary font-medium hover:bg-white hover:text-primary/90 transition"
+            className={`flex items-center gap-1 font-medium shadow-sm transition backdrop-blur-md px-4 py-2 rounded-full ${
+              theme === "light"
+                ? "bg-white/20 text-black hover:bg-white/30"
+                : "bg-black/30 text-white hover:bg-black/50"
+            }`}
             onClick={() => navigate("/analytics-history")}
           >
             <Clock className="w-4 h-4" /> History
@@ -126,7 +126,13 @@ const Analytics: React.FC = () => {
                   <span className="text-muted-foreground">
                     {monthNames[index]}
                   </span>
-                  <span className="font-semibold">${amount.toFixed(2)}</span>
+                  <span
+                    className={`font-semibold ${
+                      theme === "light" ? "text-black" : "text-white"
+                    }`}
+                  >
+                    ${amount.toFixed(2)}
+                  </span>
                 </div>
                 <div className="h-3 rounded-full overflow-hidden bg-muted">
                   <div
@@ -164,7 +170,11 @@ const Analytics: React.FC = () => {
                         <span className="font-medium">{category.name}</span>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">
+                        <p
+                          className={`font-semibold ${
+                            theme === "light" ? "text-black" : "text-white"
+                          }`}
+                        >
                           ${category.total.toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
