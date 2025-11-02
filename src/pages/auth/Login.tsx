@@ -6,12 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Cat } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebase/firebase"; // make sure this path matches your setup
 
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!form.email.trim() || !form.password.trim()) {
@@ -19,19 +22,36 @@ const Login = () => {
       return;
     }
 
-    const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = savedUsers.find(
-      (u: any) => u.email === form.email && u.password === form.password
-    );
+    setLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+      const user = userCredential.user;
 
-    if (!user) {
-      toast.error("Invalid email or password");
-      return;
+      localStorage.setItem(
+        "loggedInUser",
+        JSON.stringify({ uid: user.uid, email: user.email })
+      );
+
+      toast.success("Login successful!");
+      navigate("/");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      let message = "Login failed. Please try again.";
+      if (error.code === "auth/user-not-found")
+        message = "No user found with this email.";
+      else if (error.code === "auth/wrong-password")
+        message = "Incorrect password.";
+      else if (error.code === "auth/invalid-email")
+        message = "Invalid email format.";
+
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem("loggedInUser", JSON.stringify(user));
-    toast.success("Login successful!");
-    navigate("/");
   };
 
   return (
@@ -70,9 +90,10 @@ const Login = () => {
 
           <Button
             type="submit"
+            disabled={loading}
             className="w-full mt-4 bg-[#1e4d38] hover:bg-[#27694c] text-white"
           >
-            Log In
+            {loading ? "Logging in..." : "Log In"}
           </Button>
         </form>
 

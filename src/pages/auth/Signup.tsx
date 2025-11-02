@@ -6,12 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Cat } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { auth, db } from "@/firebase/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 const Signup = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
@@ -19,16 +23,42 @@ const Signup = () => {
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    if (users.some((u: any) => u.email === form.email)) {
-      toast.error("Email already exists");
-      return;
-    }
+    try {
+      setLoading(true);
 
-    users.push(form);
-    localStorage.setItem("users", JSON.stringify(users));
-    toast.success("Account created successfully!");
-    navigate("/login");
+      // Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+
+      const user = userCredential.user;
+
+      // Update display name
+      await updateProfile(user, { displayName: form.name });
+
+      // Save user info to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name: form.name,
+        email: form.email,
+        createdAt: new Date(),
+      });
+
+      toast.success("Account created successfully!");
+      navigate("/login");
+    } catch (error: any) {
+      if (error.code === "auth/email-already-in-use") {
+        toast.error("Email already registered");
+      } else if (error.code === "auth/weak-password") {
+        toast.error("Password should be at least 6 characters");
+      } else {
+        toast.error("Signup failed. Please try again.");
+      }
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,9 +105,10 @@ const Signup = () => {
 
           <Button
             type="submit"
+            disabled={loading}
             className="w-full mt-4 bg-[#1e4d38] hover:bg-[#27694c] text-white"
           >
-            Sign Up
+            {loading ? "Creating Account..." : "Sign Up"}
           </Button>
         </form>
 
