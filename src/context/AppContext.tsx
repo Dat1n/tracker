@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { db } from "../firebase/firebase";
+import { auth, db } from "../firebase/firebase";
 import {
   collection,
   getDocs,
@@ -10,6 +10,7 @@ import {
   deleteDoc,
   setDoc,
 } from "firebase/firestore";
+import { onAuthStateChanged, signInAnonymously } from "firebase/auth";
 
 export interface Category {
   id: string;
@@ -37,14 +38,29 @@ export interface Wallet {
   balance: number;
 }
 
+
+// ✅ Member type
+export interface SavingsMember {
+  uid: string;          // User ID from Firebase
+  name: string;         // Full name
+  email: string;        // Email of the member
+  contribution?: number; // How much this member contributed
+}
+
+// ✅ SavingsGoal type
 export interface SavingsGoal {
   id: string;
   title: string;
   targetAmount: number;
   currentAmount: number;
-  deadline?: string;
-  members?: { name: string; contribution?: number }[];
+  deadline?: string | null;
+  members?: SavingsMember[];
+  walletId: string;       // Add walletId
+  createdAt: string;      // ISO string for creation date
 }
+
+
+
 
 export interface AppContextType {
   transactions: Transaction[];
@@ -72,134 +88,111 @@ export interface AppContextType {
 const defaultCategories: Category[] = [
   { id: "food", name: "Food", icon: "🍔", color: "hsl(30 85% 82%)" },
   { id: "saving", name: "Saving", icon: "💰", color: "hsl(340 80% 85%)" },
-  {
-    id: "personal-funds",
-    name: "Personal Funds",
-    icon: "👤",
-    color: "hsl(340 80% 85%)",
-  },
+  { id: "personal-funds", name: "Personal Funds", icon: "👤", color: "hsl(340 80% 85%)" },
   { id: "parent", name: "Parent", icon: "👪", color: "hsl(340 80% 85%)" },
   { id: "shopping", name: "Shopping", icon: "🛍️", color: "hsl(340 80% 85%)" },
   { id: "bills", name: "Bills", icon: "📄", color: "hsl(270 60% 88%)" },
   { id: "transport", name: "Transport", icon: "🚗", color: "hsl(200 70% 85%)" },
-  {
-    id: "entertainment",
-    name: "Entertainment",
-    icon: "🎮",
-    color: "hsl(280 70% 85%)",
-  },
+  { id: "entertainment", name: "Entertainment", icon: "🎮", color: "hsl(280 70% 85%)" },
   { id: "health", name: "Health", icon: "💊", color: "hsl(160 60% 85%)" },
   { id: "income", name: "Income", icon: "💰", color: "hsl(140 55% 80%)" },
-  {
-    id: "savings",
-    name: "Savings",
-    icon: "🐱",
-    color: "hsla(44, 85%, 60%, 0.62)",
-  },
+  { id: "savings", name: "Savings", icon: "🐱", color: "hsla(44, 85%, 60%, 0.62)" },
 ];
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [userId, setUserId] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [activeWallet, setActiveWallet] = useState<string>("personal");
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [analyticsHistory, setAnalyticsHistory] = useState<
-    Record<number, number[]>
-  >({});
+  const [analyticsHistory, setAnalyticsHistory] = useState<Record<number, number[]>>({});
 
-  // Fetch data from Firestore
+  // ✅ Step 1: Auth setup (auto sign-in anonymously if needed)
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const txSnap = await getDocs(collection(db, "transactions"));
-        setTransactions(
-          txSnap.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as Transaction[]
-        );
-
-        const walletsSnap = await getDocs(collection(db, "wallets"));
-        setWallets(
-          walletsSnap.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as Wallet[]
-        );
-
-        const goalsSnap = await getDocs(collection(db, "savingsGoals"));
-        setSavingsGoals(
-          goalsSnap.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as SavingsGoal[]
-        );
-
-        const analyticsSnap = await getDocs(collection(db, "analyticsHistory"));
-        const analytics: Record<number, number[]> = {};
-        analyticsSnap.docs.forEach((doc) => {
-          analytics[Number(doc.id)] = doc.data().monthlyExpenses;
-        });
-        setAnalyticsHistory(analytics);
-      } catch (err) {
-        console.error("Failed to fetch data from Firestore", err);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+      } else {
+        const cred = await signInAnonymously(auth);
+        setUserId(cred.user.uid);
       }
-    };
-
-    fetchData();
-
-    // Detect system theme
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const updateTheme = (isDark: boolean) => {
-      setTheme(isDark ? "dark" : "light");
-      document.documentElement.classList.toggle("dark", isDark);
-    };
-    updateTheme(mediaQuery.matches);
-    mediaQuery.addEventListener("change", (e) => updateTheme(e.matches));
-    return () =>
-      mediaQuery.removeEventListener("change", (e) => updateTheme(e.matches));
+    });
+    return () => unsubscribe();
   }, []);
 
-  const addTransaction = async (transaction: Omit<Transaction, "id">) => {
-    if (transaction.amount <= 0) {
-      toast.error("Amount must be positive");
-      return;
-    }
-    try {
-      const docRef = await addDoc(collection(db, "transactions"), transaction);
-      const newTx: Transaction = { ...transaction, id: docRef.id };
-      setTransactions((prev) => [newTx, ...prev]);
+  // ✅ Step 2: Fetch user-specific Firestore data
+useEffect(() => {
+  if (!userId) return;
 
-      setWallets((prev) =>
-        prev.map((wallet) =>
-          wallet.id === transaction.walletId
-            ? {
-                ...wallet,
-                balance:
-                  wallet.balance +
-                  (transaction.type === "expense"
-                    ? -transaction.amount
-                    : transaction.amount),
-              }
-            : wallet
-        )
-      );
+  const fetchSavingsGoals = async () => {
+    try {
+      const goalsSnap = await getDocs(collection(db, "users", userId, "savingsGoals"));
+      const allGoals = goalsSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as SavingsGoal[];
+
+      // Filter by activeWallet
+      const filteredGoals = allGoals.filter((g) => g.walletId === activeWallet);
+
+      setSavingsGoals(filteredGoals);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to save transaction");
+      console.error("Failed to fetch savings goals", err);
     }
   };
 
+  fetchSavingsGoals();
+}, [userId, activeWallet]);
+
+
+  // ✅ Step 3: CRUD operations (user-specific)
+  // ✅ Add Transaction
+const addTransaction = async (transaction: Omit<Transaction, "id">) => {
+  if (!userId) {
+    toast.error("User not authenticated");
+    return;
+  }
+
+  if (transaction.amount <= 0) {
+    toast.error("Amount must be greater than 0");
+    return;
+  }
+
+  try {
+    const txRef = collection(db, "users", userId, "transactions");
+    const docRef = await addDoc(txRef, transaction);
+
+    const newTx: Transaction = { id: docRef.id, ...transaction };
+    setTransactions((prev) => [newTx, ...prev]);
+
+    // ✅ Update wallet balance locally
+    setWallets((prev) =>
+      prev.map((wallet) => {
+        if (wallet.id === transaction.walletId) {
+          const delta =
+            transaction.type === "expense"
+              ? -transaction.amount
+              : transaction.amount;
+          return { ...wallet, balance: wallet.balance + delta };
+        }
+        return wallet;
+      })
+    );
+
+    toast.success("Transaction added!");
+  } catch (err) {
+    console.error("❌ addTransaction failed:", err);
+    toast.error("Failed to add transaction");
+  }
+};
+
   const deleteTransaction = async (id: string) => {
+    if (!userId) return;
     const transaction = transactions.find((t) => t.id === id);
     if (!transaction) return;
+
     try {
-      await deleteDoc(doc(db, "transactions", id));
+      await deleteDoc(doc(db, "users", userId, "transactions", id));
       setTransactions((prev) => prev.filter((t) => t.id !== id));
       setWallets((prev) =>
         prev.map((wallet) =>
@@ -221,107 +214,151 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const addWallet = async (wallet: Omit<Wallet, "id" | "balance">) => {
-    try {
-      const docRef = await addDoc(collection(db, "wallets"), {
-        ...wallet,
-        balance: 0,
-      });
-      setWallets((prev) => [...prev, { ...wallet, id: docRef.id, balance: 0 }]);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create wallet");
-    }
-  };
+ // ✅ Add Wallet
+const addWallet = async (wallet: Omit<Wallet, "id" | "balance">) => {
+  if (!userId) {
+    toast.error("User not authenticated");
+    return;
+  }
 
-  const addSavingsGoal = async (
-    goal: Omit<SavingsGoal, "id">
-  ): Promise<SavingsGoal> => {
-    try {
-      const docRef = await addDoc(collection(db, "savingsGoals"), {
-        ...goal,
-        currentAmount: 0,
-        members: goal.members || [],
-      });
-      const newGoal = {
-        ...goal,
-        id: docRef.id,
-        currentAmount: 0,
-        members: goal.members || [],
-      };
-      setSavingsGoals((prev) => [...prev, newGoal]);
-      return newGoal;
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create savings goal");
-      return goal as SavingsGoal;
-    }
-  };
+  try {
+    const walletRef = collection(db, "users", userId, "wallets");
+    const docRef = await addDoc(walletRef, { ...wallet, balance: 0 });
 
-  const contributeToSaving = async (
-    goalId: string,
-    amount: number,
-    user: string
-  ) => {
-    if (amount <= 0) {
-      toast.error("Contribution must be greater than zero");
-      return;
-    }
+    const newWallet: Wallet = { ...wallet, id: docRef.id, balance: 0 };
+    setWallets((prev) => [...prev, newWallet]);
 
-    const goal = savingsGoals.find((g) => g.id === goalId);
-    if (!goal) return;
+    toast.success("Wallet created!");
+  } catch (err) {
+    console.error("❌ addWallet failed:", err);
+    toast.error("Failed to create wallet");
+  }
+};
 
-    const members = [...(goal.members || [])];
-    const idx = members.findIndex((m) => m.name === user);
-
-    if (idx >= 0) {
-      members[idx].contribution = (members[idx].contribution || 0) + amount;
-    } else {
-      members.push({ name: user, contribution: amount });
-    }
-
-    const total = members.reduce((sum, m) => sum + (m.contribution || 0), 0);
-    const updatedGoal = {
+const addSavingsGoal = async (goal: Omit<SavingsGoal, "id">): Promise<SavingsGoal> => {
+  if (!userId) throw new Error("Not authenticated");
+  try {
+    const newGoalData = {
       ...goal,
-      members,
-      currentAmount: Math.min(total, goal.targetAmount),
+      currentAmount: 0,
+      members: goal.members || [],
+      walletId: activeWallet,
+      createdAt: new Date().toISOString(),
+      deadline: goal.deadline || null, // null-safe
+    };
+    const docRef = await addDoc(collection(db, "users", userId, "savingsGoals"), newGoalData);
+
+    const newGoal: SavingsGoal = {
+      ...newGoalData,
+      id: docRef.id,
     };
 
-    try {
-      // Update goal in Firestore
-      await updateDoc(doc(db, "savingsGoals", goalId), updatedGoal);
+    setSavingsGoals((prev) => [...prev, newGoal]);
+    return newGoal;
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to create savings goal");
+    return goal as SavingsGoal;
+  }
+};
 
-      // Update local state
-      setSavingsGoals((prev) =>
-        prev.map((g) => (g.id === goalId ? updatedGoal : g))
-      );
 
-      // Add transaction separately after state update
-      await addTransaction({
-        type: "savings",
-        amount,
-        category: "savings",
-        title: `Saved to ${goal.title}`,
-        note: `Contributor: ${user}`,
-        date: new Date().toISOString(),
-        walletId: activeWallet,
-      });
+ // ✅ Contribute to Saving
+const contributeToSaving = async (
+  goalId: string,
+  amount: number,
+  userName: string
+) => {
+  if (!userId) {
+    toast.error("User not authenticated");
+    return;
+  }
+  if (amount <= 0) {
+    toast.error("Contribution must be greater than 0");
+    return;
+  }
 
-      toast.success(`Added $${amount} to ${goal.title} by ${user}!`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to contribute to savings");
-    }
-  };
-  const deleteSavingsGoal = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this saving goal?"))
+  try {
+    const goalRef = doc(db, "users", userId, "savingsGoals", goalId);
+    const goal = savingsGoals.find((g) => g.id === goalId);
+    if (!goal) {
+      toast.error("Saving goal not found");
       return;
+    }
+
+// Assume you have the current user info
+const currentUser = auth.currentUser;
+if (!currentUser) {
+  toast.error("User not authenticated");
+  return;
+}
+
+const userUid = currentUser.uid;
+const userName = currentUser.displayName || "Anonymous";
+const userEmail = currentUser.email || "";
+
+// Update members’ contributions
+const members = [...(goal.members || [])];
+
+// Check if the user is already in the members array
+const idx = members.findIndex((m) => m.uid === userUid);
+if (idx >= 0) {
+  members[idx].contribution = (members[idx].contribution || 0) + amount;
+} else {
+  // Add as a new member
+  members.push({
+    uid: userUid,
+    name: userName,
+    email: userEmail,
+    contribution: amount,
+  });
+}
+
+// Calculate total contributions
+const totalContributed = members.reduce((sum, m) => sum + (m.contribution || 0), 0);
+
+// Prepare the updated goal
+const updatedGoal: SavingsGoal = {
+  ...goal,
+  members,
+  currentAmount: Math.min(totalContributed, goal.targetAmount),
+};
+
+// Save updated goal in Firestore
+await updateDoc(goalRef, {
+  members: updatedGoal.members,
+  currentAmount: updatedGoal.currentAmount,
+});
+
+toast.success(`Added $${amount} to ${goal.title}!`);
+
+
+
+    // Record contribution as transaction
+    await addTransaction({
+      type: "savings",
+      amount,
+      category: "savings",
+      title: `Saved to ${goal.title}`,
+      note: `Contributor: ${userName}`,
+      date: new Date().toISOString(),
+      walletId: activeWallet,
+    });
+
+    toast.success(`Added $${amount} to ${goal.title}!`);
+  } catch (err) {
+    console.error("❌ contributeToSaving failed:", err);
+    toast.error("Failed to contribute to savings");
+  }
+};
+
+  const deleteSavingsGoal = async (id: string) => {
+    if (!userId) return;
+    if (!window.confirm("Are you sure you want to delete this saving goal?")) return;
     try {
-      await deleteDoc(doc(db, "savingsGoals", id));
+      await deleteDoc(doc(db, "users", userId, "savingsGoals", id));
       setSavingsGoals((prev) => prev.filter((goal) => goal.id !== id));
-      setTransactions((prev) =>
-        prev.filter((t) => t.type !== "savings" || !t.title?.includes(id))
-      );
+      setTransactions((prev) => prev.filter((t) => t.type !== "savings" || !t.title?.includes(id)));
       toast.success("Saving goal deleted!");
     } catch (err) {
       console.error(err);
@@ -330,8 +367,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const saveAnalytics = async (year: number, monthlyExpenses: number[]) => {
+    if (!userId) return;
     try {
-      await setDoc(doc(db, "analyticsHistory", year.toString()), {
+      await setDoc(doc(db, "users", userId, "analyticsHistory", year.toString()), {
         monthlyExpenses,
       });
       setAnalyticsHistory((prev) => ({ ...prev, [year]: monthlyExpenses }));
